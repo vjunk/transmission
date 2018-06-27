@@ -43,7 +43,9 @@ function PrefsDialog(remote) {
             'speed-limit-up',
             'speed-limit-up-enabled',
             'start-added-torrents',
-            'utp-enabled'
+            'utp-enabled',
+            'proxy-list-enabled',
+            'proxy-list-filename'
         ],
 
         // map of keys that are enabled only if a 'parent' key is enabled
@@ -58,7 +60,8 @@ function PrefsDialog(remote) {
             'idle-seeding-limit-enabled': ['idle-seeding-limit'],
             'seedRatioLimited': ['seedRatioLimit'],
             'speed-limit-down-enabled': ['speed-limit-down'],
-            'speed-limit-up-enabled': ['speed-limit-up']
+            'speed-limit-up-enabled': ['speed-limit-up'],
+            'proxy-list-enabled': ['proxy-list-filename' ]
         }
     };
 

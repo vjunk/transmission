@@ -263,6 +263,8 @@ enum
     TR_KEY_private,
     TR_KEY_progress,
     TR_KEY_prompt_before_exit,
+    TR_KEY_proxy_list_enabled,
+    TR_KEY_proxy_list_filename,
     TR_KEY_queue_move_bottom,
     TR_KEY_queue_move_down,
     TR_KEY_queue_move_top,

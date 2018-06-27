@@ -708,6 +708,20 @@ char const* tr_sessionGetTorrentDoneScript(tr_session const*);
 
 void tr_sessionSetTorrentDoneScript(tr_session*, char const* scriptFilename);
 
+/***
+****
+***/
+
+bool tr_sessionIsProxyListEnabled(tr_session const* session);
+
+void tr_sessionSetProxyListEnabled(tr_session* session, bool isEnabled);
+
+char const* tr_sessionGetProxyListFilename(tr_session const* session);
+
+void tr_sessionSetProxyListFilename(tr_session* session, char const* filename);
+
+void tr_sessionUpdateProxyList(tr_session* session);
+
 /** @} */
 
 /**

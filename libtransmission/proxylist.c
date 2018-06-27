@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "file.h"
 #include "log.h"
+#include "tr-assert.h"
 
 typedef struct tr_proxy_entry
 {

@@ -309,6 +309,16 @@ static CURL* createEasy(tr_session* s, struct tr_web* web, struct tr_web_task* t
         curl_easy_setopt(e, CURLOPT_ENCODING, "identity");
     }
 
+    if (s->isProxyListEnabled && s->proxyList)
+    {
+        char const* proxy = tr_getProxyUrlFromList(s->proxyList, task->url);
+        if (proxy)
+        {
+            dbgmsg("using proxy %s for %s", proxy, task->url);
+            curl_easy_setopt(e, CURLOPT_PROXY, proxy);
+        }
+    }
+
     return e;
 }
 

@@ -52,6 +52,7 @@ set(${PROJECT_NAME}_SOURCES
     platform.c
     platform-quota.c
     port-forwarding.c
+    proxylist.c
     ptrarray.c
     quark.c
     resume.c

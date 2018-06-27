@@ -19,6 +19,7 @@
 #include "net.h"
 #include "utils.h"
 #include "variant.h"
+#include "proxylist.h"
 
 typedef enum
 {
@@ -222,6 +223,10 @@ struct tr_session
 
     struct tr_bindinfo* public_ipv4;
     struct tr_bindinfo* public_ipv6;
+
+    bool isProxyListEnabled;
+    char* proxyListFilename;
+    tr_proxy_list* proxyList;
 };
 
 static inline tr_port tr_sessionGetPublicPeerPort(tr_session const* session)

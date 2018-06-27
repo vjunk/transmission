@@ -2221,6 +2221,18 @@ static char const* sessionSet(tr_session* session, tr_variant* args_in, tr_varia
         }
     }
 
+    if (tr_variantDictFindStr(args_in, TR_KEY_proxy_list_filename, &str, NULL))
+    {
+        tr_sessionSetProxyListFilename(session, str);
+    }
+
+    if (tr_variantDictFindBool(args_in, TR_KEY_proxy_list_enabled, &boolVal))
+    {
+        tr_sessionSetProxyListEnabled(session, boolVal);
+    }
+
+    tr_sessionUpdateProxyList(session);
+
     notify(session, TR_RPC_SESSION_CHANGED, NULL);
 
     return NULL;
@@ -2495,6 +2507,14 @@ static void addSessionField(tr_session* s, tr_variant* d, tr_quark key)
 
     case TR_KEY_session_id:
         tr_variantDictAddStr(d, key, tr_session_id_get_current(s->session_id));
+        break;
+
+    case TR_KEY_proxy_list_filename:
+        tr_variantDictAddStr(d, key, tr_sessionGetProxyListFilename(s));
+        break;
+
+    case TR_KEY_proxy_list_enabled:
+        tr_variantDictAddBool(d, key, tr_sessionIsProxyListEnabled(s));
         break;
     }
 }

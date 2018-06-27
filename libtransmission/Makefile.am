@@ -50,6 +50,7 @@ libtransmission_a_SOURCES = \
   platform.c \
   platform-quota.c \
   port-forwarding.c \
+  proxylist.c \
   ptrarray.c \
   quark.c \
   resume.c \
@@ -149,6 +150,7 @@ noinst_HEADERS = \
   platform.h \
   platform-quota.h \
   port-forwarding.h \
+  proxylist.h \
   ptrarray.h \
   quark.h \
   resume.h \

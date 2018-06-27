@@ -263,6 +263,8 @@ static struct tr_key_struct const my_static[] =
     Q("private"),
     Q("progress"),
     Q("prompt-before-exit"),
+    Q("proxy-list-enabled"),
+    Q("proxy-list-filename"),
     Q("queue-move-bottom"),
     Q("queue-move-down"),
     Q("queue-move-top"),

@@ -395,6 +395,8 @@ void tr_sessionGetDefaultSettings(tr_variant* d)
     tr_variantDictAddStr(d, TR_KEY_bind_address_ipv6, TR_DEFAULT_BIND_ADDRESS_IPV6);
     tr_variantDictAddBool(d, TR_KEY_start_added_torrents, true);
     tr_variantDictAddBool(d, TR_KEY_trash_original_torrent_files, false);
+    tr_variantDictAddStr(d, TR_KEY_proxy_list_filename, "");
+    tr_variantDictAddBool(d, TR_KEY_proxy_list_enabled, false);
 }
 
 void tr_sessionGetSettings(tr_session* s, tr_variant* d)
@@ -466,6 +468,8 @@ void tr_sessionGetSettings(tr_session* s, tr_variant* d)
     tr_variantDictAddStr(d, TR_KEY_bind_address_ipv6, tr_address_to_string(&s->public_ipv6->addr));
     tr_variantDictAddBool(d, TR_KEY_start_added_torrents, !tr_sessionGetPaused(s));
     tr_variantDictAddBool(d, TR_KEY_trash_original_torrent_files, tr_sessionGetDeleteSource(s));
+    tr_variantDictAddStr(d, TR_KEY_proxy_list_filename, tr_sessionGetProxyListFilename(s));
+    tr_variantDictAddBool(d, TR_KEY_proxy_list_enabled, tr_sessionIsProxyListEnabled(s));
 }
 
 bool tr_sessionLoadSettings(tr_variant* dict, char const* configDir, char const* appName)
@@ -1129,6 +1133,18 @@ static void sessionSetImpl(void* vdata)
     {
         session->scrapePausedTorrents = boolVal;
     }
+
+    if (tr_variantDictFindBool(settings, TR_KEY_proxy_list_enabled, &boolVal))
+    {
+        tr_sessionSetProxyListEnabled(session, boolVal);
+    }
+
+    if (tr_variantDictFindStr(settings, TR_KEY_proxy_list_filename, &str, NULL))
+    {
+        tr_sessionSetProxyListFilename(session, str);
+    }
+
+    tr_sessionUpdateProxyList(session);
 
     data->done = true;
 }
@@ -2099,6 +2115,8 @@ void tr_sessionClose(tr_session* session)
     tr_free(session->incompleteDir);
     tr_free(session->blocklist_url);
     tr_free(session->peer_congestion_algorithm);
+    tr_freeProxyList(session->proxyList);
+    tr_free(session->proxyListFilename);
     tr_free(session);
 }
 
@@ -3041,4 +3059,50 @@ int tr_sessionCountQueueFreeSlots(tr_session* session, tr_direction dir)
     }
 
     return max - active_count;
+}
+
+/***
+****
+***/
+
+bool tr_sessionIsProxyListEnabled(tr_session const* session)
+{
+    TR_ASSERT(tr_isSession(session));
+    return session->isProxyListEnabled;
+}
+
+void tr_sessionSetProxyListEnabled(tr_session* session, bool isEnabled)
+{
+    TR_ASSERT(tr_isSession(session));
+    session->isProxyListEnabled = isEnabled;
+}
+
+char const* tr_sessionGetProxyListFilename(tr_session const* session)
+{
+    TR_ASSERT(tr_isSession(session));
+    return session->proxyListFilename;
+}
+
+void tr_sessionSetProxyListFilename(tr_session* session, char const* filename)
+{
+    TR_ASSERT(tr_isSession(session));
+
+    if (session->proxyListFilename != filename)
+    {
+        tr_free(session->proxyListFilename);
+        session->proxyListFilename = tr_strdup(filename);
+    }
+}
+
+void tr_sessionUpdateProxyList(tr_session* session)
+{
+    TR_ASSERT(tr_isSession(session));
+
+    tr_freeProxyList(session->proxyList);
+    session->proxyList = NULL;
+
+    if (session->isProxyListEnabled && session->proxyListFilename)
+    {
+        session->proxyList = tr_loadProxyList(session->proxyListFilename);
+    }
 }
