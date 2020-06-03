@@ -22,7 +22,7 @@ struct tr_proxy_list
 
 static char const* getKey(void)
 {
-    return _("Proxy list:");
+    return "Proxy list:";
 }
 
 static int tr_countLines(char const* text, size_t len)
