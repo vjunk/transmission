@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <cctype> // isxdigit()
+#include <libtransmission/transmission.h>
 
 #include <QPointer>
 #include <QRect>
@@ -70,25 +70,12 @@ public:
 
     static bool isMagnetLink(QString const& s)
     {
-        return s.startsWith(QStringLiteral("magnet:?"));
+        return tr_isMagnet(s.toUtf8().constData());
     }
 
     static bool isHexHashcode(QString const& s)
     {
-        if (s.length() != 40)
-        {
-            return false;
-        }
-
-        for (auto const& ch : s)
-        {
-            if (!isxdigit(ch.unicode()))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return tr_maybeHash(s.toUtf8().constData());
     }
 
     static bool isUriWithSupportedScheme(QString const& s)

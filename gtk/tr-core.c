@@ -1301,10 +1301,8 @@ static bool add_file(TrCore* core, GFile* file, gboolean do_start, gboolean do_p
 
             if (gtr_is_hex_hashcode(str))
             {
-                char* magnet = g_strdup_printf("magnet:?xt=urn:btih:%s", str);
                 tried = true;
-                loaded = !tr_ctorSetMetainfoFromMagnetLink(ctor, magnet);
-                g_free(magnet);
+                loaded = !tr_ctorSetMetainfoFromMagnetLink(ctor, str);
             }
 
             g_free(str);
