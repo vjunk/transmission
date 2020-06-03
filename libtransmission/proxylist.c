@@ -20,7 +20,10 @@ struct tr_proxy_list
     tr_proxy_entry* proxyEntrys;
 };
 
-static char const* getKey(void) { return _("Proxy list:"); }
+static char const* getKey(void)
+    {
+    return _("Proxy list:");
+    }
 
 static int tr_countLines(char const* text, size_t len)
 {
@@ -34,7 +37,9 @@ static int tr_countLines(char const* text, size_t len)
 
         eol = memchr(text, '\n', len);
         if (eol == NULL)
+        {
             break;
+        }
 
         len -= eol + 1 - text;
         text = eol + 1;
@@ -55,7 +60,8 @@ static tr_proxy_entry* tr_parseProxyListText(char* text, size_t len)
         TR_PL_SPACE,
         TR_PL_PROXY,
         TR_PL_SKIP
-    } state = TR_PL_START;
+    }
+    state = TR_PL_START;
 
     line_count = tr_countLines(text, len);
     entrys = tr_malloc0((line_count + 1) * sizeof(*entrys));
@@ -116,7 +122,7 @@ static tr_proxy_entry* tr_parseProxyListText(char* text, size_t len)
     return entrys;
 }
 
-tr_proxy_list* tr_loadProxyList (char const* filename)
+tr_proxy_list* tr_loadProxyList(char const* filename)
 {
     tr_proxy_list* proxy_list = NULL;
     char* text;
@@ -130,7 +136,7 @@ tr_proxy_list* tr_loadProxyList (char const* filename)
         return proxy_list;
     }
 
-    proxy_entrys = tr_parseProxyListText(text, len); 
+    proxy_entrys = tr_parseProxyListText(text, len);
 
     if (proxy_entrys == NULL || proxy_entrys[0].url_mask == NULL)
     {
@@ -179,4 +185,3 @@ char const* tr_getProxyUrlFromList(tr_proxy_list const* proxy_list, char const* 
 
     return NULL;
 }
-

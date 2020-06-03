@@ -61,7 +61,7 @@ function PrefsDialog(remote) {
             'seedRatioLimited': ['seedRatioLimit'],
             'speed-limit-down-enabled': ['speed-limit-down'],
             'speed-limit-up-enabled': ['speed-limit-up'],
-            'proxy-list-enabled': ['proxy-list-filename' ]
+            'proxy-list-enabled': ['proxy-list-filename']
         }
     };
 
