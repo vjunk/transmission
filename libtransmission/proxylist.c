@@ -3,22 +3,11 @@
 #include <ctype.h>
 #include "transmission.h"
 #include "proxylist.h"
+#include "variant.h"
 #include "utils.h"
 #include "file.h"
 #include "log.h"
 #include "tr-assert.h"
-
-typedef struct tr_proxy_entry
-{
-    char* url_mask;
-    char* proxy_url;
-} tr_proxy_entry;
-
-struct tr_proxy_list
-{
-    char* proxyListText;
-    tr_proxy_entry* proxyEntrys;
-};
 
 static char const* getKey(void)
 {
@@ -48,11 +37,11 @@ static int tr_countLines(char const* text, size_t len)
     return count;
 }
 
-static tr_proxy_entry* tr_parseProxyListText(char* text, size_t len)
+static void tr_parseProxyListText(tr_variant* setme, char* text, size_t len)
 {
-    tr_proxy_entry* entrys = NULL;
-    int i = 0;
     int line_count;
+    char* url_mask = NULL;
+    char* proxy_url = NULL;
     enum
     {
         TR_PL_START,
@@ -64,8 +53,9 @@ static tr_proxy_entry* tr_parseProxyListText(char* text, size_t len)
     state = TR_PL_START;
 
     line_count = tr_countLines(text, len);
-    entrys = tr_malloc0((line_count + 1) * sizeof(*entrys));
-    TR_ASSERT(entrys != NULL);
+
+    tr_variantFree(setme);
+    tr_variantInitList(setme, line_count);
 
     while (*text != '\0')
     {
@@ -73,17 +63,20 @@ static tr_proxy_entry* tr_parseProxyListText(char* text, size_t len)
         {
             *text = 0;
 
-            if (entrys[i].url_mask != NULL)
+            if (url_mask != NULL)
             {
-                if (entrys[i].proxy_url == NULL)
+                if (proxy_url == NULL)
                 {
-                    entrys[i].proxy_url = text;
+                    proxy_url = text;
                 }
 
-                ++i;
+                tr_variantListAddStr(setme, url_mask);
+                tr_variantListAddStr(setme, proxy_url);
             }
 
             state = TR_PL_START;
+            url_mask = NULL;
+            proxy_url = NULL;
         }
         else if ((state != TR_PL_SKIP) && (*text == '#'))
         {
@@ -92,7 +85,7 @@ static tr_proxy_entry* tr_parseProxyListText(char* text, size_t len)
         }
         else if ((state == TR_PL_START) && !isspace(*text))
         {
-            entrys[i].url_mask = text;
+            url_mask = text;
             state = TR_PL_MASK;
         }
         else if ((state == TR_PL_MASK) && isspace(*text))
@@ -102,7 +95,7 @@ static tr_proxy_entry* tr_parseProxyListText(char* text, size_t len)
         }
         else if ((state == TR_PL_SPACE) && !isspace(*text))
         {
-            entrys[i].proxy_url = text;
+            proxy_url = text;
             state = TR_PL_PROXY;
         }
         else if (state == TR_PL_PROXY && isspace(*text))
@@ -114,20 +107,27 @@ static tr_proxy_entry* tr_parseProxyListText(char* text, size_t len)
         ++text;
     }
 
-    if ((entrys[i].url_mask != NULL) && (entrys[i].proxy_url == NULL))
+    if (url_mask != NULL)
     {
-        entrys[i].proxy_url = text;
-    }
+        if (proxy_url == NULL)
+        {
+            proxy_url = text;
+        }
 
-    return entrys;
+        tr_variantListAddStr(setme, url_mask);
+        tr_variantListAddStr(setme, proxy_url);
+    }
 }
 
 tr_proxy_list* tr_loadProxyList(char const* filename)
 {
-    tr_proxy_list* proxy_list = NULL;
+    tr_proxy_list* proxy_list;
     char* text;
     size_t len;
-    tr_proxy_entry* proxy_entrys;
+
+    proxy_list = tr_malloc0(sizeof(*proxy_list));
+    TR_ASSERT(proxy_list != NULL);
+    tr_variantInitList(proxy_list, 0);
 
     text = (char*)tr_loadFile(filename, &len, NULL);
     if (text == NULL)
@@ -136,21 +136,13 @@ tr_proxy_list* tr_loadProxyList(char const* filename)
         return proxy_list;
     }
 
-    proxy_entrys = tr_parseProxyListText(text, len);
+    tr_parseProxyListText(proxy_list, text, len);
+    tr_free(text);
 
-    if (proxy_entrys == NULL || proxy_entrys[0].url_mask == NULL)
+    if (tr_variantListSize(proxy_list) / 2 == 0)
     {
         tr_logAddNamedDbg(getKey(), "No proxy entrys in %s", filename);
-        tr_free(proxy_entrys);
-        tr_free(text);
-        return proxy_list;
     }
-
-    proxy_list = tr_malloc0(sizeof(*proxy_list));
-    TR_ASSERT(proxy_list != NULL);
-
-    proxy_list->proxyListText = text;
-    proxy_list->proxyEntrys = proxy_entrys;
 
     tr_logAddNamedDbg(getKey(), "Loaded proxy list: %s", filename);
 
@@ -161,25 +153,34 @@ void tr_freeProxyList(tr_proxy_list* proxy_list)
 {
     if (proxy_list != NULL)
     {
-        tr_free(proxy_list->proxyEntrys);
-        tr_free(proxy_list->proxyListText);
+        tr_variantFree(proxy_list);
         tr_free(proxy_list);
     }
 }
 
-char const* tr_getProxyUrlFromList(tr_proxy_list const* proxy_list, char const* tracker_url)
+char const* tr_getProxyUrlFromList(tr_proxy_list* proxy_list, char const* tracker_url)
 {
-    tr_proxy_entry const* proxy;
+    size_t sz;
+    size_t i;
 
-    TR_ASSERT(proxy_list != NULL);
+    TR_ASSERT(tr_variantIsList(proxy_list));
     TR_ASSERT(tracker_url != NULL);
 
+    sz = tr_variantListSize(proxy_list);
+
     /* This will be slow for large proxy list, so don't use large lists */
-    for (proxy = proxy_list->proxyEntrys; proxy->url_mask != NULL; ++proxy)
+    for (i = 0; i < sz; i += 2)
     {
-        if (tr_wildmat(tracker_url, proxy->url_mask))
+        char const* url_mask;
+        char const* proxy_url;
+
+        if (tr_variantGetStr(tr_variantListChild(proxy_list, i), &url_mask, NULL)
+            && tr_variantGetStr(tr_variantListChild(proxy_list, i + 1), &proxy_url, NULL))
         {
-            return proxy->proxy_url;
+            if (tr_wildmat(tracker_url, url_mask))
+            {
+                return proxy_url;
+            }
         }
     }
 
