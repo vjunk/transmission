@@ -712,15 +712,9 @@ void tr_sessionSetTorrentDoneScript(tr_session*, char const* scriptFilename);
 ****
 ***/
 
-bool tr_sessionIsProxyListEnabled(tr_session const* session);
+void tr_sessionSetProxyList(tr_session* session, struct tr_variant const* slist);
 
-void tr_sessionSetProxyListEnabled(tr_session* session, bool isEnabled);
-
-char const* tr_sessionGetProxyListFilename(tr_session const* session);
-
-void tr_sessionSetProxyListFilename(tr_session* session, char const* filename);
-
-void tr_sessionUpdateProxyList(tr_session* session);
+void tr_sessionCopyProxyList(struct tr_variant* slist, tr_session const* session);
 
 /** @} */
 

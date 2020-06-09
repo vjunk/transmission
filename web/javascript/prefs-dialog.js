@@ -44,8 +44,7 @@ function PrefsDialog(remote) {
             'speed-limit-up-enabled',
             'start-added-torrents',
             'utp-enabled',
-            'proxy-list-enabled',
-            'proxy-list-filename'
+            'proxy-list'
         ],
 
         // map of keys that are enabled only if a 'parent' key is enabled
@@ -60,8 +59,7 @@ function PrefsDialog(remote) {
             'idle-seeding-limit-enabled': ['idle-seeding-limit'],
             'seedRatioLimited': ['seedRatioLimit'],
             'speed-limit-down-enabled': ['speed-limit-down'],
-            'speed-limit-up-enabled': ['speed-limit-up'],
-            'proxy-list-enabled': ['proxy-list-filename']
+            'speed-limit-up-enabled': ['speed-limit-up']
         }
     };
 
@@ -97,6 +95,23 @@ function PrefsDialog(remote) {
         };
     };
 
+    var setProxyList = function (e, val) {
+        var text = '';
+        var i;
+
+        for (i = 1; i < val.length; i += 2) {
+            text = text + val[i - 1] + ' ' + val[i] + '\n';
+        };
+
+        e.val(text);
+   };
+
+    var parseProxyList = function (val) {
+        var a = val.split(/\s+/);
+        a.length = Math.floor(a.length / 2) * 2;
+        return a;
+   };
+
     var onBlocklistUpdateClicked = function () {
         data.remote.updateBlocklist();
         setBlocklistButtonEnabled(false);
@@ -111,6 +126,10 @@ function PrefsDialog(remote) {
     var getValue = function (e) {
         var str;
 
+        if (e.length == 0) {
+            return null;
+        };
+
         switch (e[0].type) {
         case 'checkbox':
         case 'radio':
@@ -122,6 +141,7 @@ function PrefsDialog(remote) {
         case 'number':
         case 'search':
         case 'select-one':
+        case 'textarea':
             str = e.val();
             if (parseInt(str, 10).toString() === str) {
                 return parseInt(str, 10);
@@ -154,6 +174,9 @@ function PrefsDialog(remote) {
     var onControlBlurred = function (ev) {
         var newValue = getValue($(ev.target));
         if (newValue !== data.oldValue) {
+            if (ev.target.id === 'proxy-list') {
+                newValue = parseProxyList(newValue);
+            };
             var o = {};
             o[ev.target.id] = newValue;
             data.remote.savePrefs(o);
@@ -196,6 +219,12 @@ function PrefsDialog(remote) {
         // listen for user input
         for (i = 0; key = data.keys[i]; ++i) {
             e = data.elements.root.find('#' + key);
+
+            if (e.length == 0) {
+                console.error("initialize: wrong key: ", key);
+                continue;
+            };
+
             switch (e[0].type) {
             case 'checkbox':
             case 'radio':
@@ -208,10 +237,16 @@ function PrefsDialog(remote) {
             case 'email':
             case 'number':
             case 'search':
+            case 'textarea':
                 e.focus(onControlFocused);
                 e.blur(onControlBlurred);
+                break;
+
+            case undefined:
+                break;
 
             default:
+                console.log("initialize: unknown type: ", key, e[0].type);
                 break;
             };
         };
@@ -254,9 +289,18 @@ function PrefsDialog(remote) {
             val = o[key];
             e = root.find('#' + key);
 
+            if (e.length == 0) {
+                console.error("set: wrong key: ", key);
+                continue;
+            };
+
             if (key === 'blocklist-size') {
                 // special case -- regular text area
                 e.text('' + val.toStringWithCommas());
+            } else if (key === 'proxy-list') {
+                if (e[0] !== document.activeElement) {
+                    setProxyList(e, val);
+                };
             } else switch (e[0].type) {
             case 'checkbox':
             case 'radio':
@@ -268,6 +312,7 @@ function PrefsDialog(remote) {
             case 'email':
             case 'number':
             case 'search':
+            case 'textarea':
                 // don't change the text if the user's editing it.
                 // it's very annoying when that happens!
                 if (e[0] !== document.activeElement) {
@@ -277,7 +322,10 @@ function PrefsDialog(remote) {
             case 'select-one':
                 e.val(val);
                 break;
+            case undefined:
+                break;
             default:
+                console.log("set: unknown type: ", key, e[0].type);
                 break;
             };
         };

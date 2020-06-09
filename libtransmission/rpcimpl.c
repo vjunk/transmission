@@ -1999,6 +1999,7 @@ static char const* sessionSet(tr_session* session, tr_variant* args_in, tr_varia
     double d;
     bool boolVal;
     char const* str;
+    tr_variant* list;
 
     if (tr_variantDictFindInt(args_in, TR_KEY_cache_size_mb, &i))
     {
@@ -2221,17 +2222,10 @@ static char const* sessionSet(tr_session* session, tr_variant* args_in, tr_varia
         }
     }
 
-    if (tr_variantDictFindStr(args_in, TR_KEY_proxy_list_filename, &str, NULL))
+    if (tr_variantDictFindList(args_in, TR_KEY_proxy_list, &list))
     {
-        tr_sessionSetProxyListFilename(session, str);
+        tr_sessionSetProxyList(session, list);
     }
-
-    if (tr_variantDictFindBool(args_in, TR_KEY_proxy_list_enabled, &boolVal))
-    {
-        tr_sessionSetProxyListEnabled(session, boolVal);
-    }
-
-    tr_sessionUpdateProxyList(session);
 
     notify(session, TR_RPC_SESSION_CHANGED, NULL);
 
@@ -2509,13 +2503,12 @@ static void addSessionField(tr_session* s, tr_variant* d, tr_quark key)
         tr_variantDictAddStr(d, key, tr_session_id_get_current(s->session_id));
         break;
 
-    case TR_KEY_proxy_list_filename:
-        tr_variantDictAddStr(d, key, tr_sessionGetProxyListFilename(s));
-        break;
-
-    case TR_KEY_proxy_list_enabled:
-        tr_variantDictAddBool(d, key, tr_sessionIsProxyListEnabled(s));
-        break;
+    case TR_KEY_proxy_list:
+        {
+            tr_variant* slist = tr_variantDictAddList(d, key, 0);
+            tr_sessionCopyProxyList(slist, s);
+            break;
+        }
     }
 }
 

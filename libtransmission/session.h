@@ -224,8 +224,6 @@ struct tr_session
     struct tr_bindinfo* public_ipv4;
     struct tr_bindinfo* public_ipv6;
 
-    bool isProxyListEnabled;
-    char* proxyListFilename;
     tr_proxy_list* proxyList;
 };
 

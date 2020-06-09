@@ -395,8 +395,7 @@ void tr_sessionGetDefaultSettings(tr_variant* d)
     tr_variantDictAddStr(d, TR_KEY_bind_address_ipv6, TR_DEFAULT_BIND_ADDRESS_IPV6);
     tr_variantDictAddBool(d, TR_KEY_start_added_torrents, true);
     tr_variantDictAddBool(d, TR_KEY_trash_original_torrent_files, false);
-    tr_variantDictAddStr(d, TR_KEY_proxy_list_filename, "");
-    tr_variantDictAddBool(d, TR_KEY_proxy_list_enabled, false);
+    tr_variantDictAddList(d, TR_KEY_proxy_list, 0);
 }
 
 void tr_sessionGetSettings(tr_session* s, tr_variant* d)
@@ -468,8 +467,7 @@ void tr_sessionGetSettings(tr_session* s, tr_variant* d)
     tr_variantDictAddStr(d, TR_KEY_bind_address_ipv6, tr_address_to_string(&s->public_ipv6->addr));
     tr_variantDictAddBool(d, TR_KEY_start_added_torrents, !tr_sessionGetPaused(s));
     tr_variantDictAddBool(d, TR_KEY_trash_original_torrent_files, tr_sessionGetDeleteSource(s));
-    tr_variantDictAddStr(d, TR_KEY_proxy_list_filename, tr_sessionGetProxyListFilename(s));
-    tr_variantDictAddBool(d, TR_KEY_proxy_list_enabled, tr_sessionIsProxyListEnabled(s));
+    tr_sessionCopyProxyList(tr_variantDictAddList(d, TR_KEY_proxy_list, 0), s);
 }
 
 bool tr_sessionLoadSettings(tr_variant* dict, char const* configDir, char const* appName)
@@ -807,6 +805,7 @@ static void sessionSetImpl(void* vdata)
     char const* str;
     struct tr_bindinfo b;
     struct tr_turtle_info* turtle = &session->turtle;
+    tr_variant* slist;
 
     if (tr_variantDictFindInt(settings, TR_KEY_message_level, &i))
     {
@@ -1134,17 +1133,10 @@ static void sessionSetImpl(void* vdata)
         session->scrapePausedTorrents = boolVal;
     }
 
-    if (tr_variantDictFindBool(settings, TR_KEY_proxy_list_enabled, &boolVal))
+    if (tr_variantDictFindList(settings, TR_KEY_proxy_list, &slist))
     {
-        tr_sessionSetProxyListEnabled(session, boolVal);
+        tr_sessionSetProxyList(session, slist);
     }
-
-    if (tr_variantDictFindStr(settings, TR_KEY_proxy_list_filename, &str, NULL))
-    {
-        tr_sessionSetProxyListFilename(session, str);
-    }
-
-    tr_sessionUpdateProxyList(session);
 
     data->done = true;
 }
@@ -2116,7 +2108,6 @@ void tr_sessionClose(tr_session* session)
     tr_free(session->blocklist_url);
     tr_free(session->peer_congestion_algorithm);
     tr_freeProxyList(session->proxyList);
-    tr_free(session->proxyListFilename);
     tr_free(session);
 }
 
@@ -3065,44 +3056,24 @@ int tr_sessionCountQueueFreeSlots(tr_session* session, tr_direction dir)
 ****
 ***/
 
-bool tr_sessionIsProxyListEnabled(tr_session const* session)
-{
-    TR_ASSERT(tr_isSession(session));
-    return session->isProxyListEnabled;
-}
-
-void tr_sessionSetProxyListEnabled(tr_session* session, bool isEnabled)
-{
-    TR_ASSERT(tr_isSession(session));
-    session->isProxyListEnabled = isEnabled;
-}
-
-char const* tr_sessionGetProxyListFilename(tr_session const* session)
-{
-    TR_ASSERT(tr_isSession(session));
-    return session->proxyListFilename;
-}
-
-void tr_sessionSetProxyListFilename(tr_session* session, char const* filename)
+void tr_sessionSetProxyList(tr_session* session, tr_variant const* slist)
 {
     TR_ASSERT(tr_isSession(session));
 
-    if (session->proxyListFilename != filename)
+    if (session->proxyList == NULL)
     {
-        tr_free(session->proxyListFilename);
-        session->proxyListFilename = tr_strdup(filename);
+        session->proxyList = tr_cloneProxyList(slist);
+    }
+    else
+    {
+        tr_copyProxyList(session->proxyList, slist);
     }
 }
 
-void tr_sessionUpdateProxyList(tr_session* session)
+void tr_sessionCopyProxyList(tr_variant* slist, tr_session const* session)
 {
+    TR_ASSERT(tr_variantIsList(slist));
     TR_ASSERT(tr_isSession(session));
-
-    tr_freeProxyList(session->proxyList);
-    session->proxyList = NULL;
-
-    if (session->isProxyListEnabled && session->proxyListFilename)
-    {
-        session->proxyList = tr_loadProxyList(session->proxyListFilename);
-    }
+    tr_copyProxyList(slist, session->proxyList);
 }
+

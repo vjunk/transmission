@@ -86,6 +86,7 @@
 				<li id="prefs-tab-speed"><a href="#prefs-page-speed">Speed</a></li>
 				<li id="prefs-tab-peers"><a href="#prefs-page-peers">Peers</a></li>
 				<li id="prefs-tab-network"><a href="#prefs-page-network">Network</a></li>
+				<li id="prefs-tab-proxy"><a href="#prefs-page-proxy">Proxy</a></li>
 				<li class="ui-tab-dialog-close"></li>
 			</ul>
 			<div>
@@ -183,10 +184,11 @@
 						<div class="checkbox-row"><input type="checkbox" id="utp-enabled" title="uTP is a tool for reducing network congestion."/>
 						                          <label for="utp-enabled" title="uTP is a tool for reducing network congestion.">Enable uTP for peer communication</label></div>
 					</div>
+				</div>
+				<div id="prefs-page-proxy">
 					<div class="prefs-section">
-						<div class="title">Proxy</div>
-						<div class="row"><div class="key"><input type="checkbox" id="proxy-list-enabled"/><label for="proxy-list-enabled">Enable proxy list:</label></div>
-						                 <div class="value"><input type="text" id="proxy-list-filename"/></div></div>
+						<div class="title">Proxy list</div>
+						<div class="row"><textarea id="proxy-list" cols="30" rows="10"></textarea></div>
 					</div>
 				</div>
 			</div>

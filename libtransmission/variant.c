@@ -1091,9 +1091,17 @@ void tr_variantMergeDicts(tr_variant* target, tr_variant const* source)
             }
             else if (tr_variantIsList(val))
             {
-                if (tr_variantDictFind(target, key) == NULL)
+                tr_variant* target_list = tr_variantDictFind(target, key);
+
+                if (target_list == NULL)
                 {
                     tr_variantListCopy(tr_variantDictAddList(target, key, tr_variantListSize(val)), val);
+                }
+                else if (tr_variantIsList(target_list))
+                {
+                    tr_variantFree(target_list);
+                    tr_variantInitList(target_list, tr_variantListSize(val));
+                    tr_variantListCopy(target_list, val);
                 }
             }
             else if (tr_variantIsDict(val))
