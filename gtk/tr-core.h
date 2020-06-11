@@ -140,6 +140,7 @@ void gtr_core_set_pref(TrCore* self, tr_quark const key, char const* val);
 void gtr_core_set_pref_bool(TrCore* self, tr_quark const key, gboolean val);
 void gtr_core_set_pref_int(TrCore* self, tr_quark const key, int val);
 void gtr_core_set_pref_double(TrCore* self, tr_quark const key, double val);
+void gtr_core_set_pref_list(TrCore* self, tr_quark const key, tr_variant const* newval);
 
 /**
 ***

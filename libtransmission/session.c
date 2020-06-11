@@ -329,7 +329,7 @@ void tr_sessionGetDefaultSettings(tr_variant* d)
 {
     TR_ASSERT(tr_variantIsDict(d));
 
-    tr_variantDictReserve(d, 63);
+    tr_variantDictReserve(d, 66);
     tr_variantDictAddBool(d, TR_KEY_blocklist_enabled, false);
     tr_variantDictAddStr(d, TR_KEY_blocklist_url, "http://www.example.com/blocklist");
     tr_variantDictAddInt(d, TR_KEY_cache_size_mb, DEFAULT_CACHE_SIZE_MB);
@@ -395,14 +395,14 @@ void tr_sessionGetDefaultSettings(tr_variant* d)
     tr_variantDictAddStr(d, TR_KEY_bind_address_ipv6, TR_DEFAULT_BIND_ADDRESS_IPV6);
     tr_variantDictAddBool(d, TR_KEY_start_added_torrents, true);
     tr_variantDictAddBool(d, TR_KEY_trash_original_torrent_files, false);
-    tr_variantDictAddList(d, TR_KEY_proxy_list, 0);
+    tr_variantDictAddOrReplaceList(d, TR_KEY_proxy_list, 0);
 }
 
 void tr_sessionGetSettings(tr_session* s, tr_variant* d)
 {
     TR_ASSERT(tr_variantIsDict(d));
 
-    tr_variantDictReserve(d, 63);
+    tr_variantDictReserve(d, 66);
     tr_variantDictAddBool(d, TR_KEY_blocklist_enabled, tr_blocklistIsEnabled(s));
     tr_variantDictAddStr(d, TR_KEY_blocklist_url, tr_blocklistGetURL(s));
     tr_variantDictAddInt(d, TR_KEY_cache_size_mb, tr_sessionGetCacheLimit_MB(s));
@@ -467,7 +467,7 @@ void tr_sessionGetSettings(tr_session* s, tr_variant* d)
     tr_variantDictAddStr(d, TR_KEY_bind_address_ipv6, tr_address_to_string(&s->public_ipv6->addr));
     tr_variantDictAddBool(d, TR_KEY_start_added_torrents, !tr_sessionGetPaused(s));
     tr_variantDictAddBool(d, TR_KEY_trash_original_torrent_files, tr_sessionGetDeleteSource(s));
-    tr_sessionCopyProxyList(tr_variantDictAddList(d, TR_KEY_proxy_list, 0), s);
+    tr_sessionCopyProxyList(tr_variantDictAddOrReplaceList(d, TR_KEY_proxy_list, 0), s);
 }
 
 bool tr_sessionLoadSettings(tr_variant* dict, char const* configDir, char const* appName)
@@ -805,7 +805,7 @@ static void sessionSetImpl(void* vdata)
     char const* str;
     struct tr_bindinfo b;
     struct tr_turtle_info* turtle = &session->turtle;
-    tr_variant* slist;
+    tr_variant* vlist;
 
     if (tr_variantDictFindInt(settings, TR_KEY_message_level, &i))
     {
@@ -1133,9 +1133,9 @@ static void sessionSetImpl(void* vdata)
         session->scrapePausedTorrents = boolVal;
     }
 
-    if (tr_variantDictFindList(settings, TR_KEY_proxy_list, &slist))
+    if (tr_variantDictFindList(settings, TR_KEY_proxy_list, &vlist))
     {
-        tr_sessionSetProxyList(session, slist);
+        tr_sessionSetProxyList(session, vlist);
     }
 
     data->done = true;
@@ -2107,7 +2107,7 @@ void tr_sessionClose(tr_session* session)
     tr_free(session->incompleteDir);
     tr_free(session->blocklist_url);
     tr_free(session->peer_congestion_algorithm);
-    tr_freeProxyList(session->proxyList);
+    tr_proxyListFree(session->proxyList);
     tr_free(session);
 }
 
@@ -3056,24 +3056,22 @@ int tr_sessionCountQueueFreeSlots(tr_session* session, tr_direction dir)
 ****
 ***/
 
-void tr_sessionSetProxyList(tr_session* session, tr_variant const* slist)
+void tr_sessionSetProxyList(tr_session* session, tr_variant const* vlist)
 {
     TR_ASSERT(tr_isSession(session));
 
     if (session->proxyList == NULL)
     {
-        session->proxyList = tr_cloneProxyList(slist);
+        session->proxyList = tr_proxyListNew();
     }
-    else
-    {
-        tr_copyProxyList(session->proxyList, slist);
-    }
+
+    tr_proxyListUpdate(session->proxyList, vlist);
 }
 
-void tr_sessionCopyProxyList(tr_variant* slist, tr_session const* session)
+void tr_sessionCopyProxyList(tr_variant* vlist, tr_session const* session)
 {
-    TR_ASSERT(tr_variantIsList(slist));
+    TR_ASSERT(tr_variantIsList(vlist));
     TR_ASSERT(tr_isSession(session));
-    tr_copyProxyList(slist, session->proxyList);
+    tr_proxyListGet(session->proxyList, vlist);
 }
 

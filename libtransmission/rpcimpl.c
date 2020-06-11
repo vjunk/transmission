@@ -1999,7 +1999,7 @@ static char const* sessionSet(tr_session* session, tr_variant* args_in, tr_varia
     double d;
     bool boolVal;
     char const* str;
-    tr_variant* list;
+    tr_variant* vlist;
 
     if (tr_variantDictFindInt(args_in, TR_KEY_cache_size_mb, &i))
     {
@@ -2222,9 +2222,9 @@ static char const* sessionSet(tr_session* session, tr_variant* args_in, tr_varia
         }
     }
 
-    if (tr_variantDictFindList(args_in, TR_KEY_proxy_list, &list))
+    if (tr_variantDictFindList(args_in, TR_KEY_proxy_list, &vlist))
     {
-        tr_sessionSetProxyList(session, list);
+        tr_sessionSetProxyList(session, vlist);
     }
 
     notify(session, TR_RPC_SESSION_CHANGED, NULL);
@@ -2505,8 +2505,8 @@ static void addSessionField(tr_session* s, tr_variant* d, tr_quark key)
 
     case TR_KEY_proxy_list:
         {
-            tr_variant* slist = tr_variantDictAddList(d, key, 0);
-            tr_sessionCopyProxyList(slist, s);
+            tr_variant* vlist = tr_variantDictAddOrReplaceList(d, key, 0);
+            tr_sessionCopyProxyList(vlist, s);
             break;
         }
     }

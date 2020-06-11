@@ -310,7 +310,7 @@ static CURL* createEasy(tr_session* s, struct tr_web* web, struct tr_web_task* t
         curl_easy_setopt(e, CURLOPT_ENCODING, "identity");
     }
 
-    proxy = tr_getProxyUrlFromList(s->proxyList, task->url);
+    proxy = tr_proxyGetUrl(s->proxyList, task->url);
 
     if (!tr_str_is_empty(proxy))
     {

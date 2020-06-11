@@ -1193,6 +1193,76 @@ static GtkWidget* networkPage(GObject* core)
 }
 
 /****
+*****  Proxy Tab
+****/
+
+static void proxy_changed_cb(GtkTextBuffer* w, gpointer core)
+{
+    tr_quark const key = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), PREF_KEY));
+    GtkTextIter start, end;
+    gchar* text;
+    tr_variant vlist;
+
+    gtk_text_buffer_get_bounds(w, &start, &end);
+    text = gtk_text_buffer_get_text(w, &start, &end, FALSE);
+    tr_variantInitList(&vlist, 0);
+    tr_proxyTextToVarList(&vlist, text);
+    gtr_core_set_pref_list(TR_CORE(core), key, &vlist);
+    tr_variantFree(&vlist);
+    g_free(text);
+}
+
+static GtkWidget* proxyPage(GObject* core)
+{
+    GtkWidget* t;
+    GtkWidget* l;
+    GtkWidget* v;
+    GtkWidget* vv;
+    GtkTextBuffer* text_buf;
+    GtkCssProvider* css;
+    tr_variant const* vlist;
+    char* s;
+    guint row = 0;
+
+    /* build the page */
+    t = hig_workarea_create();
+
+    hig_workarea_add_section_title(t, &row, _("Proxy list"));
+
+    l = gtk_label_new(_(
+        "Each line in the list must consist of two ''words''.\n"
+        "First ''word'' is a tracker domain mask with wildcards ('*' and '?').\n"
+        "Second ''word'' is a CURL-style proxy URL ([protocol://]host[:port]).\n"
+        "The protocol may be one of: socks4://, socks4a://, socks5://, socks5h://, http://, https://\n"
+        "Examples:\n"
+        "<tt>*.onion/*         socks5h://127.0.0.1:9050\n"
+        "*my.tracker.com/* http://my.proxy.com\n"
+        "*                 https://all.proxy.com</tt>"));
+    gtk_label_set_use_markup(GTK_LABEL(l), TRUE);
+    hig_workarea_add_wide_control(t, &row, l);
+
+    v = gtk_text_view_new();
+    css = gtk_css_provider_new();
+    gtk_css_provider_load_from_data(css, "* {font-family: monospace;}", -1, NULL);
+    gtk_style_context_add_provider(gtk_widget_get_style_context(v),
+        GTK_STYLE_PROVIDER(css), GTK_STYLE_PROVIDER_PRIORITY_USER);
+    g_object_unref(G_OBJECT(css));
+    vv = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_add(GTK_CONTAINER(vv), v);
+    hig_workarea_add_wide_tall_control(t, &row, vv);
+
+    text_buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(v));
+    vlist = gtr_pref_list_get(TR_KEY_proxy_list);
+    s = tr_proxyVarListToText(vlist);
+    gtk_text_buffer_set_text(text_buf, s, -1);
+    tr_free(s);
+    g_object_set_data(G_OBJECT(text_buf), PREF_KEY, GINT_TO_POINTER(TR_KEY_proxy_list));
+    g_signal_connect(G_OBJECT(text_buf), "changed", G_CALLBACK(proxy_changed_cb), core);
+
+    return t;
+}
+
+/****
 *****
 ****/
 
@@ -1255,6 +1325,7 @@ GtkWidget* gtr_prefs_dialog_new(GtkWindow* parent, GObject* core)
     gtk_notebook_append_page(GTK_NOTEBOOK(n), seedingPage(core), gtk_label_new(C_("Gerund", "Seeding")));
     gtk_notebook_append_page(GTK_NOTEBOOK(n), privacyPage(core), gtk_label_new(_("Privacy")));
     gtk_notebook_append_page(GTK_NOTEBOOK(n), networkPage(core), gtk_label_new(_("Network")));
+    gtk_notebook_append_page(GTK_NOTEBOOK(n), proxyPage(core), gtk_label_new(_("Proxy")));
     gtk_notebook_append_page(GTK_NOTEBOOK(n), desktopPage(core), gtk_label_new(_("Desktop")));
     gtk_notebook_append_page(GTK_NOTEBOOK(n), remotePage(core), gtk_label_new(_("Remote")));
 

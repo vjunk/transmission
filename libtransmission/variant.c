@@ -697,6 +697,13 @@ tr_variant* tr_variantDictAddList(tr_variant* dict, tr_quark const key, size_t r
     return child;
 }
 
+tr_variant* tr_variantDictAddOrReplaceList(tr_variant* dict, tr_quark const key, size_t reserve_count)
+{
+    tr_variant* child = dictFindOrAdd(dict, key, TR_VARIANT_TYPE_LIST);
+    tr_variantInitList(child, reserve_count);
+    return child;
+}
+
 tr_variant* tr_variantDictAddDict(tr_variant* dict, tr_quark const key, size_t reserve_count)
 {
     tr_variant* child = tr_variantDictAdd(dict, key);
@@ -973,7 +980,7 @@ void tr_variantFree(tr_variant* v)
 ****
 ***/
 
-static void tr_variantListCopy(tr_variant* target, tr_variant const* src)
+void tr_variantListCopy(tr_variant* target, tr_variant const* src)
 {
     int i = 0;
     tr_variant const* val;

@@ -1294,6 +1294,10 @@ static void on_prefs_changed(TrCore* core UNUSED, tr_quark const key, gpointer d
         tr_sessionSetDeleteSource(tr, gtr_pref_flag_get(key));
         break;
 
+    case TR_KEY_proxy_list:
+        tr_sessionSetProxyList(tr, gtr_pref_list_get(key));
+        break;
+
     default:
         break;
     }

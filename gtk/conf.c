@@ -194,6 +194,22 @@ void gtr_pref_string_set(tr_quark const key, char const* value)
 ****
 ***/
 
+tr_variant const* gtr_pref_list_get(tr_quark const key)
+{
+    tr_variant* vlist;
+
+    return tr_variantDictFindList(getPrefs(), key, &vlist) ? vlist : NULL;
+}
+
+void gtr_pref_list_set(tr_quark const key, tr_variant const* value)
+{
+    tr_variantListCopy(tr_variantDictAddOrReplaceList(getPrefs(), key, 0), value);
+}
+
+/***
+****
+***/
+
 void gtr_pref_save(tr_session* session)
 {
     tr_sessionSaveSettings(session, gl_confdir, getPrefs());

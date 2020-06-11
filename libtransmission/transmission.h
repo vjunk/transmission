@@ -712,9 +712,15 @@ void tr_sessionSetTorrentDoneScript(tr_session*, char const* scriptFilename);
 ****
 ***/
 
-void tr_sessionSetProxyList(tr_session* session, struct tr_variant const* slist);
+void tr_sessionSetProxyList(tr_session* session, struct tr_variant const* vlist);
 
-void tr_sessionCopyProxyList(struct tr_variant* slist, tr_session const* session);
+void tr_sessionCopyProxyList(struct tr_variant* vlist, tr_session const* session);
+
+void tr_proxyTextToVarList(struct tr_variant *vlist, char const* text);
+
+char* tr_proxyVarListToText(struct tr_variant const* vlist);
+
+bool tr_proxyCompareVarLists(struct tr_variant const* a, struct tr_variant const* b);
 
 /** @} */
 

@@ -8,12 +8,13 @@
 
 typedef tr_variant tr_proxy_list;
 
-void tr_parseProxyListText(tr_proxy_list* proxy_list, char const* text);
+tr_proxy_list* tr_proxyListNew(void);
 
-void tr_copyProxyList(tr_proxy_list* target, tr_proxy_list const* source);
+void tr_proxyListFree(tr_proxy_list* proxy_list);
 
-tr_proxy_list* tr_cloneProxyList(tr_proxy_list const* source);
+void tr_proxyListUpdate(tr_proxy_list* proxy_list, tr_variant const* vlist);
 
-void tr_freeProxyList(tr_proxy_list* proxy_list);
+void tr_proxyListGet(tr_proxy_list* const proxy_list, tr_variant* vlist);
 
-char const* tr_getProxyUrlFromList(tr_proxy_list const* proxy_list, char const* tracker_url);
+char const* tr_proxyGetUrl(tr_proxy_list const* proxy_list, char const* tracker_url);
+

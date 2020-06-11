@@ -40,5 +40,8 @@ void gtr_pref_flag_set(tr_quark const key, gboolean value);
 char const* gtr_pref_string_get(tr_quark const key);
 void gtr_pref_string_set(tr_quark const key, char const* value);
 
+struct tr_variant const* gtr_pref_list_get(tr_quark const key);
+void gtr_pref_list_set(tr_quark const key, struct tr_variant const* value);
+
 void gtr_pref_save(tr_session*);
 struct tr_variant* gtr_pref_get_all(void);
