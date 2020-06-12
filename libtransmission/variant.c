@@ -1112,14 +1112,14 @@ bool tr_variantListCompare(tr_variant const* a, tr_variant const* b)
         }
         else if (tr_variantIsList(val_a))
         {
-        if (!tr_variantListCompare(val_a, val_b))
+            if (!tr_variantListCompare(val_a, val_b))
             {
                 return false;
             }
         }
         else if (tr_variantIsDict(val_a))
         {
-        if (!tr_variantDictCompare(val_a, val_b))
+            if (!tr_variantDictCompare(val_a, val_b))
             {
                 return false;
             }
@@ -1325,14 +1325,14 @@ bool tr_variantDictCompare(tr_variant const* a, tr_variant const* b)
         }
         else if (tr_variantIsList(val_a))
         {
-        if (!tr_variantListCompare(val_a, val_b))
+            if (!tr_variantListCompare(val_a, val_b))
             {
                 return false;
             }
         }
         else if (tr_variantIsDict(val_a))
         {
-        if (!tr_variantDictCompare(val_a, val_b))
+            if (!tr_variantDictCompare(val_a, val_b))
             {
                 return false;
             }
@@ -1524,4 +1524,3 @@ int tr_variantFromBuf(tr_variant* setme, tr_variant_fmt fmt, void const* buf, si
     restore_locale(&locale_ctx);
     return err;
 }
-

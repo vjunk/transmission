@@ -28,7 +28,7 @@ void tr_proxyListUpdate(tr_proxy_list* proxy_list, tr_variant const* vlist)
     tr_variantFree(proxy_list);
     tr_variantInitList(proxy_list, 0);
 
-    if(vlist == NULL)
+    if (vlist == NULL)
     {
         return;
     }
@@ -73,8 +73,8 @@ char const* tr_proxyGetUrl(tr_proxy_list const* proxy_list, char const* tracker_
         char const* url_mask;
         char const* proxy_url;
 
-        if (tr_variantGetStr(tr_variantListChild((tr_variant*)proxy_list, i - 1), &url_mask, NULL)
-            && tr_variantGetStr(tr_variantListChild((tr_variant*)proxy_list, i), &proxy_url, NULL))
+        if (tr_variantGetStr(tr_variantListChild((tr_variant*)proxy_list, i - 1), &url_mask, NULL) &&
+            tr_variantGetStr(tr_variantListChild((tr_variant*)proxy_list, i), &proxy_url, NULL))
         {
             if (tr_wildmat(tracker_url, url_mask))
             {
@@ -85,4 +85,3 @@ char const* tr_proxyGetUrl(tr_proxy_list const* proxy_list, char const* tracker_
 
     return NULL;
 }
-

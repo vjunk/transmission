@@ -482,7 +482,7 @@ void PrefsDialog::proxyTextChanged()
         QStringList line_list = text.split(QLatin1Char('\n'), QString::SkipEmptyParts);
         QRegExp const space(QLatin1String("\\s+"));
 
-        for (QString const &line : line_list)
+        for (QString const& line : line_list)
         {
             QStringList words = line.split(space, QString::SkipEmptyParts);
 
@@ -501,7 +501,6 @@ void PrefsDialog::proxyTextChanged()
 
 void PrefsDialog::initProxyTab()
 {
-
     PreferenceWidget pref_widget(ui_.proxyTextEdit);
     pref_widget.setPrefKey(Prefs::PROXY_LIST);
     updateProxyValue(ui_.proxyTextEdit, Prefs::PROXY_LIST);

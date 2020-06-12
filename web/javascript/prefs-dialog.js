@@ -104,13 +104,13 @@ function PrefsDialog(remote) {
         };
 
         e.val(text);
-   };
+    };
 
     var parseProxyList = function (val) {
         var a = val.split(/\s+/);
         a.length = Math.floor(a.length / 2) * 2;
         return a;
-   };
+    };
 
     var onBlocklistUpdateClicked = function () {
         data.remote.updateBlocklist();

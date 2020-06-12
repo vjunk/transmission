@@ -17,4 +17,3 @@ void tr_proxyListUpdate(tr_proxy_list* proxy_list, tr_variant const* vlist);
 void tr_proxyListGet(tr_proxy_list* const proxy_list, tr_variant* vlist);
 
 char const* tr_proxyGetUrl(tr_proxy_list const* proxy_list, char const* tracker_url);
-

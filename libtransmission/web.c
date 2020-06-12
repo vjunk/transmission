@@ -243,7 +243,7 @@ static CURL* createEasy(tr_session* s, struct tr_web* web, struct tr_web_task* t
     bool is_default_value;
     tr_address const* addr;
     CURL* e = curl_easy_init();
-    char const* proxy = NULL;;
+    char const* proxy = NULL;
 
     task->curl_easy = e;
     task->timeout_secs = getTimeoutFromURL(task);

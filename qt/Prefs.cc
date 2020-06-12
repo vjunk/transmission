@@ -296,7 +296,7 @@ Prefs::~Prefs()
                 QStringList const qslist(val.toStringList());
                 tr_variant* vlist = tr_variantDictAddOrReplaceList(&current_settings, key, qslist.size());
 
-                for (QString const &str : qslist)
+                for (QString const& str : qslist)
                 {
                     QByteArray raw = str.toUtf8();
                     tr_variantListAddRaw(vlist, raw.constData(), raw.size());

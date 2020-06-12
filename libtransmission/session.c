@@ -3074,4 +3074,3 @@ void tr_sessionCopyProxyList(tr_variant* vlist, tr_session const* session)
     TR_ASSERT(tr_isSession(session));
     tr_proxyListGet(session->proxyList, vlist);
 }
-

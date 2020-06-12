@@ -1196,7 +1196,7 @@ static GtkWidget* networkPage(GObject* core)
 *****  Proxy Tab
 ****/
 
-static void proxyTextToVarList(tr_variant *vlist, char const* text)
+static void proxyTextToVarList(tr_variant* vlist, char const* text)
 {
     char const* url_mask = NULL;
     char const* url_mask_end = NULL;
@@ -1301,14 +1301,14 @@ static size_t countTextSize(tr_variant const* vlist, size_t* align)
         size_t len;
         char const* str;
 
-        tr_variantGetStr(tr_variantListChild((tr_variant *)vlist, i - 1), &str, &len);
+        tr_variantGetStr(tr_variantListChild((tr_variant*)vlist, i - 1), &str, &len);
 
         if (len1 < len)
         {
             len1 = len;
         }
 
-        tr_variantGetStr(tr_variantListChild((tr_variant *)vlist, i), &str, &len);
+        tr_variantGetStr(tr_variantListChild((tr_variant*)vlist, i), &str, &len);
         len2 += len;
     }
 
@@ -1348,13 +1348,13 @@ static char* proxyVarListToText(tr_variant const* vlist)
         size_t len;
         char const* str;
 
-        tr_variantGetStr(tr_variantListChild((tr_variant *)vlist, i - 1), &str, &len);
+        tr_variantGetStr(tr_variantListChild((tr_variant*)vlist, i - 1), &str, &len);
         memcpy(pos, str, len);
         pos += align;
 
         ++pos; /* One space */
 
-        tr_variantGetStr(tr_variantListChild((tr_variant *)vlist, i), &str, &len);
+        tr_variantGetStr(tr_variantListChild((tr_variant*)vlist, i), &str, &len);
         memcpy(pos, str, len);
         pos += len;
 

@@ -90,7 +90,7 @@ void Session::sessionSet(tr_quark const key, QVariant const& value)
             QStringList const qslist(value.toStringList());
             tr_variant* vlist = tr_variantDictAddOrReplaceList(&args, key, qslist.size());
 
-            for (QString const &str : qslist)
+            for (QString const& str : qslist)
             {
                 QByteArray raw = str.toUtf8();
                 tr_variantListAddRaw(vlist, raw.constData(), raw.size());
@@ -893,7 +893,7 @@ void Session::updateInfo(tr_variant* d)
                     size_t val_len;
                     char const* val;
 
-                    if (tr_variantGetStr(tr_variantListChild((tr_variant *)b, child), &val, &val_len))
+                    if (tr_variantGetStr(tr_variantListChild((tr_variant*)b, child), &val, &val_len))
                     {
                         qslist += QString::fromUtf8(val, val_len);
                     }
