@@ -1743,7 +1743,7 @@ void gtr_core_set_pref_double(TrCore* self, tr_quark const key, double newval)
 
 void gtr_core_set_pref_list(TrCore* self, tr_quark const key, tr_variant const* newval)
 {
-    if (!tr_proxyCompareVarLists(newval, gtr_pref_list_get(key)))
+    if (!tr_variantListCompare(newval, gtr_pref_list_get(key)))
     {
         gtr_pref_list_set(key, newval);
         core_commit_prefs_change(self, key);

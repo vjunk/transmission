@@ -1029,6 +1029,111 @@ void tr_variantListCopy(tr_variant* target, tr_variant const* src)
     }
 }
 
+bool tr_variantListCompare(tr_variant const* a, tr_variant const* b)
+{
+    size_t count = 0;
+    size_t i;
+
+    if (a == NULL && b == NULL)
+    {
+        return true;
+    }
+
+    if (a == NULL || b == NULL)
+    {
+        return false;
+    }
+
+    TR_ASSERT(tr_variantIsList(a));
+    TR_ASSERT(tr_variantIsList(b));
+
+    count = tr_variantListSize(a);
+
+    if (tr_variantListSize(b) != count)
+    {
+        return false;
+    }
+
+    for (i = 0; i < count; ++i)
+    {
+        tr_variant const* val_a = tr_variantListChild((tr_variant*)a, i);
+        tr_variant const* val_b = tr_variantListChild((tr_variant*)b, i);
+
+        if (val_a->type != val_b->type)
+        {
+            return false;
+        }
+
+        if (tr_variantIsBool(val_a))
+        {
+            bool boolVal_a = false;
+            bool boolVal_b = false;
+            tr_variantGetBool(val_a, &boolVal_a);
+            tr_variantGetBool(val_b, &boolVal_b);
+            if (boolVal_a != boolVal_b)
+            {
+                return false;
+            }
+        }
+        else if (tr_variantIsReal(val_a))
+        {
+            double realVal_a = 0;
+            double realVal_b = 0;
+            tr_variantGetReal(val_a, &realVal_a);
+            tr_variantGetReal(val_b, &realVal_b);
+            if ((realVal_a < realVal_b) || (realVal_a > realVal_b))
+            {
+                return false;
+            }
+        }
+        else if (tr_variantIsInt(val_a))
+        {
+            int64_t intVal_a = 0;
+            int64_t intVal_b = 0;
+            tr_variantGetInt(val_a, &intVal_a);
+            tr_variantGetInt(val_b, &intVal_b);
+            if (intVal_a != intVal_b)
+            {
+                return false;
+            }
+        }
+        else if (tr_variantIsString(val_a))
+        {
+            size_t len_a;
+            size_t len_b;
+            char const* str_a;
+            char const* str_b;
+            tr_variantGetStr(val_a, &str_a, &len_a);
+            tr_variantGetStr(val_b, &str_b, &len_b);
+            if ((len_a != len_b) || (memcmp(str_a, str_b, len_a) != 0))
+            {
+                return false;
+            }
+        }
+        else if (tr_variantIsList(val_a))
+        {
+        if (!tr_variantListCompare(val_a, val_b))
+            {
+                return false;
+            }
+        }
+        else if (tr_variantIsDict(val_a))
+        {
+        if (!tr_variantDictCompare(val_a, val_b))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            tr_logAddError("tr_variantListCompare can't compare item");
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static size_t tr_variantDictSize(tr_variant const* dict)
 {
     return tr_variantIsDict(dict) ? dict->val.l.count : 0;
@@ -1131,6 +1236,115 @@ void tr_variantMergeDicts(tr_variant* target, tr_variant const* source)
             }
         }
     }
+}
+
+bool tr_variantDictCompare(tr_variant const* a, tr_variant const* b)
+{
+    size_t count = 0;
+    size_t i;
+
+    if (a == NULL && b == NULL)
+    {
+        return true;
+    }
+
+    if (a == NULL || b == NULL)
+    {
+        return false;
+    }
+
+    TR_ASSERT(tr_variantIsDict(a));
+    TR_ASSERT(tr_variantIsDict(b));
+
+    count = tr_variantDictSize(a);
+
+    if (tr_variantDictSize(b) != count)
+    {
+        return false;
+    }
+
+    for (i = 0; i < count; ++i)
+    {
+        tr_quark key_a;
+        tr_quark key_b;
+        tr_variant const* val_a;
+        tr_variant const* val_b;
+        tr_variantDictChild((tr_variant*)a, i, &key_a, (tr_variant**)&val_a);
+        tr_variantDictChild((tr_variant*)b, i, &key_b, (tr_variant**)&val_b);
+
+        if ((key_a != key_b) || (val_a->type != val_b->type))
+        {
+            return false;
+        }
+
+        if (tr_variantIsBool(val_a))
+        {
+            bool boolVal_a = false;
+            bool boolVal_b = false;
+            tr_variantGetBool(val_a, &boolVal_a);
+            tr_variantGetBool(val_b, &boolVal_b);
+            if (boolVal_a != boolVal_b)
+            {
+                return false;
+            }
+        }
+        else if (tr_variantIsReal(val_a))
+        {
+            double realVal_a = 0;
+            double realVal_b = 0;
+            tr_variantGetReal(val_a, &realVal_a);
+            tr_variantGetReal(val_b, &realVal_b);
+            if ((realVal_a < realVal_b) || (realVal_a > realVal_b))
+            {
+                return false;
+            }
+        }
+        else if (tr_variantIsInt(val_a))
+        {
+            int64_t intVal_a = 0;
+            int64_t intVal_b = 0;
+            tr_variantGetInt(val_a, &intVal_a);
+            tr_variantGetInt(val_b, &intVal_b);
+            if (intVal_a != intVal_b)
+            {
+                return false;
+            }
+        }
+        else if (tr_variantIsString(val_a))
+        {
+            size_t len_a;
+            size_t len_b;
+            char const* str_a;
+            char const* str_b;
+            tr_variantGetStr(val_a, &str_a, &len_a);
+            tr_variantGetStr(val_b, &str_b, &len_b);
+            if ((len_a != len_b) || (memcmp(str_a, str_b, len_a) != 0))
+            {
+                return false;
+            }
+        }
+        else if (tr_variantIsList(val_a))
+        {
+        if (!tr_variantListCompare(val_a, val_b))
+            {
+                return false;
+            }
+        }
+        else if (tr_variantIsDict(val_a))
+        {
+        if (!tr_variantDictCompare(val_a, val_b))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            tr_logAddError("tr_variantDictCompare can't compare item");
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /***
@@ -1310,3 +1524,4 @@ int tr_variantFromBuf(tr_variant* setme, tr_variant_fmt fmt, void const* buf, si
     restore_locale(&locale_ctx);
     return err;
 }
+

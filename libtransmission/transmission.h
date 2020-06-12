@@ -716,8 +716,6 @@ void tr_sessionSetProxyList(tr_session* session, struct tr_variant const* vlist)
 
 void tr_sessionCopyProxyList(struct tr_variant* vlist, tr_session const* session);
 
-bool tr_proxyCompareVarLists(struct tr_variant const* a, struct tr_variant const* b);
-
 /** @} */
 
 /**

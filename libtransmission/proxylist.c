@@ -1,4 +1,3 @@
-#include <string.h> /* memcmp */
 #include "transmission.h"
 #include "proxylist.h"
 #include "variant.h"
@@ -85,58 +84,5 @@ char const* tr_proxyGetUrl(tr_proxy_list const* proxy_list, char const* tracker_
     }
 
     return NULL;
-}
-
-bool tr_proxyCompareVarLists(tr_variant const* a, tr_variant const* b)
-{
-    size_t count;
-    size_t i;
-
-    if (a == NULL && b == NULL)
-    {
-        return true;
-    }
-
-    if (a == NULL || b == NULL)
-    {
-        return false;
-    }
-
-    TR_ASSERT(tr_variantIsList(a));
-    TR_ASSERT(tr_variantIsList(b));
-
-    count = tr_variantListSize(a);
-
-    if (tr_variantListSize(b) != count)
-    {
-        return false;
-    }
-
-    for (i = 0; i < count; ++i)
-    {
-        size_t len_a;
-        size_t len_b;
-        char const* str_a;
-        char const* str_b;
-        tr_variant* vstr;
-
-        vstr = tr_variantListChild((tr_variant *)a, i);
-        tr_variantGetStr(vstr, &str_a, &len_a);
-
-        vstr = tr_variantListChild((tr_variant *)b, i);
-        tr_variantGetStr(vstr, &str_b, &len_b);
-
-        if (len_a != len_b)
-        {
-            return false;
-        }
-
-        if (memcmp(str_a, str_b, len_a) != 0)
-        {
-            return false;
-        }
-    }
-
-    return true;
 }
 

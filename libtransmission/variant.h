@@ -233,6 +233,7 @@ tr_variant* tr_variantListChild(tr_variant* list, size_t pos);
 bool tr_variantListRemove(tr_variant* list, size_t pos);
 size_t tr_variantListSize(tr_variant const* list);
 void tr_variantListCopy(tr_variant* target, tr_variant const* src);
+bool tr_variantListCompare(tr_variant const* a, tr_variant const* b);
 
 /***
 ****  Dictionaries
@@ -270,6 +271,7 @@ bool tr_variantDictFindRaw(tr_variant* dict, tr_quark const key, uint8_t const**
 
 /* this is only quasi-supported. don't rely on it too heavily outside of libT */
 void tr_variantMergeDicts(tr_variant* dict_target, tr_variant const* dict_source);
+bool tr_variantDictCompare(tr_variant const* a, tr_variant const* b);
 
 /***
 ****
