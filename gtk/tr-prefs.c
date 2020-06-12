@@ -1196,6 +1196,176 @@ static GtkWidget* networkPage(GObject* core)
 *****  Proxy Tab
 ****/
 
+static void proxyTextToVarList(tr_variant *vlist, char const* text)
+{
+    char const* url_mask = NULL;
+    char const* url_mask_end = NULL;
+    char const* proxy_url = NULL;
+    char const* proxy_url_end = NULL;
+    enum
+    {
+        TR_PL_START,
+        TR_PL_MASK,
+        TR_PL_SPACE,
+        TR_PL_PROXY,
+        TR_PL_SKIP,
+        TR_PL_FINISH
+    }
+    state = TR_PL_START;
+
+    while (state != TR_PL_FINISH)
+    {
+        if ((*text == '\n') || (*text == '\0'))
+        {
+            if (url_mask != NULL)
+            {
+                if (url_mask_end == NULL)
+                {
+                    url_mask_end = text;
+                }
+
+                if (proxy_url == NULL)
+                {
+                    proxy_url = text;
+                }
+
+                if (proxy_url_end == NULL)
+                {
+                    proxy_url_end = text;
+                }
+
+                tr_variantListAddRaw(vlist, url_mask, url_mask_end - url_mask);
+                tr_variantListAddRaw(vlist, proxy_url, proxy_url_end - proxy_url);
+            }
+
+            if (*text == '\0')
+            {
+                state = TR_PL_FINISH;
+            }
+            else
+            {
+                state = TR_PL_START;
+                url_mask = NULL;
+                url_mask_end = NULL;
+                proxy_url = NULL;
+                proxy_url_end = NULL;
+            }
+        }
+        else if (*text == '#')
+        {
+            if (state == TR_PL_MASK)
+            {
+                url_mask_end = text;
+            }
+            else if (state == TR_PL_PROXY)
+            {
+                proxy_url_end = text;
+            }
+
+            state = TR_PL_SKIP;
+        }
+        else if ((state == TR_PL_START) && !isspace(*text))
+        {
+            url_mask = text;
+            state = TR_PL_MASK;
+        }
+        else if ((state == TR_PL_MASK) && isspace(*text))
+        {
+            url_mask_end = text;
+            state = TR_PL_SPACE;
+        }
+        else if ((state == TR_PL_SPACE) && !isspace(*text))
+        {
+            proxy_url = text;
+            state = TR_PL_PROXY;
+        }
+        else if ((state == TR_PL_PROXY) && isspace(*text))
+        {
+            proxy_url_end = text;
+            state = TR_PL_SKIP;
+        }
+
+        ++text;
+    }
+}
+
+static size_t countTextSize(tr_variant const* vlist, size_t* align)
+{
+    size_t count = tr_variantListSize(vlist);
+    size_t len1 = 0;
+    size_t len2 = 0;
+    size_t i;
+
+    for (i = 1; i < count; i += 2)
+    {
+        size_t len;
+        char const* str;
+
+        tr_variantGetStr(tr_variantListChild((tr_variant *)vlist, i - 1), &str, &len);
+
+        if (len1 < len)
+        {
+            len1 = len;
+        }
+
+        tr_variantGetStr(tr_variantListChild((tr_variant *)vlist, i), &str, &len);
+        len2 += len;
+    }
+
+    count = count / 2;
+    *align = len1;
+
+    return (len1 + 2) * count + len2 + 1;
+}
+
+static char* proxyVarListToText(tr_variant const* vlist)
+{
+    size_t size;
+    size_t align;
+    size_t count;
+    size_t i;
+    char* buf;
+    char* pos;
+
+    if (vlist == NULL)
+    {
+        count = 0;
+        size = 1;
+        align = 0;
+    }
+    else
+    {
+        count = tr_variantListSize(vlist);
+        size = countTextSize(vlist, &align);
+    }
+
+    buf = tr_malloc0(size);
+    memset(buf, ' ', size - 1);
+    pos = buf;
+
+    for (i = 1; i < count; i += 2)
+    {
+        size_t len;
+        char const* str;
+
+        tr_variantGetStr(tr_variantListChild((tr_variant *)vlist, i - 1), &str, &len);
+        memcpy(pos, str, len);
+        pos += align;
+
+        ++pos; /* One space */
+
+        tr_variantGetStr(tr_variantListChild((tr_variant *)vlist, i), &str, &len);
+        memcpy(pos, str, len);
+        pos += len;
+
+        *pos++ = '\n';
+    }
+
+    *pos = '\0';
+
+    return buf;
+}
+
 static void proxy_changed_cb(GtkTextBuffer* w, gpointer core)
 {
     tr_quark const key = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), PREF_KEY));
@@ -1206,7 +1376,7 @@ static void proxy_changed_cb(GtkTextBuffer* w, gpointer core)
     gtk_text_buffer_get_bounds(w, &start, &end);
     text = gtk_text_buffer_get_text(w, &start, &end, FALSE);
     tr_variantInitList(&vlist, 0);
-    tr_proxyTextToVarList(&vlist, text);
+    proxyTextToVarList(&vlist, text);
     gtr_core_set_pref_list(TR_CORE(core), key, &vlist);
     tr_variantFree(&vlist);
     g_free(text);
@@ -1253,7 +1423,7 @@ static GtkWidget* proxyPage(GObject* core)
 
     text_buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(v));
     vlist = gtr_pref_list_get(TR_KEY_proxy_list);
-    s = tr_proxyVarListToText(vlist);
+    s = proxyVarListToText(vlist);
     gtk_text_buffer_set_text(text_buf, s, -1);
     tr_free(s);
     g_object_set_data(G_OBJECT(text_buf), PREF_KEY, GINT_TO_POINTER(TR_KEY_proxy_list));
