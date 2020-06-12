@@ -85,6 +85,20 @@ void Session::sessionSet(tr_quark const key, QVariant const& value)
         tr_variantDictAddStr(&args, key, value.toString().toUtf8().constData());
         break;
 
+    case QVariant::StringList:
+        {
+            QStringList const qslist(value.toStringList());
+            tr_variant* vlist = tr_variantDictAddOrReplaceList(&args, key, qslist.size());
+
+            for (QString const &str : qslist)
+            {
+                QByteArray raw = str.toUtf8();
+                tr_variantListAddRaw(vlist, raw.constData(), raw.size());
+            }
+        }
+
+        break;
+
     default:
         assert(false);
     }
@@ -192,6 +206,7 @@ void Session::updatePref(int key)
         case Prefs::USPEED:
         case Prefs::USPEED_ENABLED:
         case Prefs::UTP_ENABLED:
+        case Prefs::PROXY_LIST:
             sessionSet(prefs_.getKey(key), prefs_.variant(key));
             break;
 
@@ -864,6 +879,27 @@ void Session::updateInfo(tr_variant* d)
                 {
                     prefs_.set(i, QString::fromUtf8(val));
                 }
+
+                break;
+            }
+
+        case QVariant::StringList:
+            {
+                size_t count = tr_variantListSize(b);
+                QStringList qslist;
+
+                for (size_t child = 0; child < count; ++child)
+                {
+                    size_t val_len;
+                    char const* val;
+
+                    if (tr_variantGetStr(tr_variantListChild((tr_variant *)b, child), &val, &val_len))
+                    {
+                        qslist += QString::fromUtf8(val, val_len);
+                    }
+                }
+
+                prefs_.set(i, qslist);
 
                 break;
             }

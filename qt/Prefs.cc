@@ -105,6 +105,7 @@ std::array<Prefs::PrefItem, Prefs::PREFS_COUNT> const Prefs::Items
     { UTP_ENABLED, TR_KEY_utp_enabled, QVariant::Bool },
     { LPD_ENABLED, TR_KEY_lpd_enabled, QVariant::Bool },
     { PORT_FORWARDING, TR_KEY_port_forwarding_enabled, QVariant::Bool },
+    { PROXY_LIST, TR_KEY_proxy_list, QVariant::StringList },
     { PREALLOCATION, TR_KEY_preallocation, QVariant::Int },
     { RATIO, TR_KEY_ratio_limit, QVariant::Double },
     { RATIO_ENABLED, TR_KEY_ratio_limit_enabled, QVariant::Bool },
@@ -191,6 +192,25 @@ Prefs::Prefs(QString config_dir) :
 
             break;
 
+        case QVariant::StringList:
+            if (tr_variantIsList(b))
+            {
+                size_t count = tr_variantListSize(b);
+                QStringList qslist;
+
+                for (size_t child = 0; child < count; ++child)
+                {
+                    if (tr_variantGetStr(tr_variantListChild(b, child), &str, &str_len))
+                    {
+                        qslist += QString::fromUtf8(str, str_len);
+                    }
+                }
+
+                values_[i].setValue(qslist);
+            }
+
+            break;
+
         case QVariant::Bool:
             if (tr_variantGetBool(b, &bool_val))
             {
@@ -266,6 +286,20 @@ Prefs::~Prefs()
                 else
                 {
                     tr_variantDictAddStr(&current_settings, key, val.toString().toUtf8().constData());
+                }
+
+                break;
+            }
+
+        case QVariant::StringList:
+            {
+                QStringList const qslist(val.toStringList());
+                tr_variant* vlist = tr_variantDictAddOrReplaceList(&current_settings, key, qslist.size());
+
+                for (QString const &str : qslist)
+                {
+                    QByteArray raw = str.toUtf8();
+                    tr_variantListAddRaw(vlist, raw.constData(), raw.size());
                 }
 
                 break;
@@ -375,6 +409,12 @@ QString Prefs::getString(int key) const
     }
 
     return values_[key].toString();
+}
+
+QStringList Prefs::getStringList(int key) const
+{
+    assert(Items[key].type == QVariant::StringList);
+    return values_[key].toStringList();
 }
 
 int Prefs::getInt(int key) const

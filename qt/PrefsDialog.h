@@ -38,6 +38,7 @@ private:
     void linkWidgetToPref(QWidget* widget, int pref_key);
     void updateBlocklistLabel();
     void updateDownloadingWidgetsLocality();
+    void updateProxyValue(QWidget* widget, int pref_key);
 
     void setPref(int key, QVariant const& v);
 
@@ -46,6 +47,7 @@ private:
     void initSpeedTab();
     void initPrivacyTab();
     void initNetworkTab();
+    void initProxyTab();
     void initDesktopTab();
     void initRemoteTab();
 
@@ -55,6 +57,7 @@ private slots:
     void timeEditingFinished();
     void lineEditingFinished();
     void pathChanged(QString const& path);
+    void proxyTextChanged();
     void refreshPref(int key);
     void encryptionEdited(int);
     void altSpeedDaysEdited(int);
@@ -91,4 +94,5 @@ private:
     int blocklist_http_tag_ = {};
     QHttp* blocklist_http_ = {};
     QMessageBox* blocklist_dialog_ = {};
+    bool proxy_editor_active_ = {};
 };

@@ -34,6 +34,9 @@
 #include <QTimeEdit>
 #include <QTimer>
 #include <QVBoxLayout>
+#include <QStringList>
+#include <QPlainTextEdit>
+#include <QRegExp>
 
 #include "ColumnResizer.h"
 #include "FreeSpaceLabel.h"
@@ -431,6 +434,84 @@ void PrefsDialog::initNetworkTab()
 ****
 ***/
 
+void PrefsDialog::updateProxyValue(QWidget* widget, int pref_key)
+{
+    if (proxy_editor_active_)
+    {
+        return;
+    }
+
+    QPlainTextEdit* te = qobject_cast<QPlainTextEdit*>(widget);
+
+    if (te == nullptr)
+    {
+        return;
+    }
+
+    QStringList const qslist = prefs_.getStringList(pref_key);
+    QString text;
+    int align = 0;
+
+    for (int i = 0; i < qslist.size(); i += 2)
+    {
+        if (align < qslist[i].length())
+        {
+            align = qslist[i].length();
+        }
+    }
+
+    for (int i = 1; i < qslist.size(); i += 2)
+    {
+        text += qslist[i - 1].leftJustified(align + 1);
+        text += qslist[i];
+        text += QLatin1Char('\n');
+    }
+
+    te->setPlainText(text);
+}
+
+void PrefsDialog::proxyTextChanged()
+{
+    PreferenceWidget const pref_widget(sender());
+
+    if (pref_widget.getPrefKey() == Prefs::PROXY_LIST)
+    {
+        QPlainTextEdit const* const te = pref_widget.as<QPlainTextEdit>();
+        QString text = te->toPlainText();
+        QStringList qslist;
+        QStringList line_list = text.split(QLatin1Char('\n'), QString::SkipEmptyParts);
+        QRegExp const space(QLatin1String("\\s+"));
+
+        for (QString const &line : line_list)
+        {
+            QStringList words = line.split(space, QString::SkipEmptyParts);
+
+            if (!words.isEmpty())
+            {
+                qslist += words[0];
+                qslist += words.value(1);
+            }
+        }
+
+        proxy_editor_active_ = true;
+        setPref(pref_widget.getPrefKey(), qslist);
+        proxy_editor_active_ = false;
+    }
+}
+
+void PrefsDialog::initProxyTab()
+{
+
+    PreferenceWidget pref_widget(ui_.proxyTextEdit);
+    pref_widget.setPrefKey(Prefs::PROXY_LIST);
+    updateProxyValue(ui_.proxyTextEdit, Prefs::PROXY_LIST);
+    connect(ui_.proxyTextEdit, SIGNAL(textChanged()), SLOT(proxyTextChanged()));
+}
+
+/***
+****
+***/
+
 void PrefsDialog::onBlocklistDialogDestroyed(QObject* o)
 {
     Q_UNUSED(o)
@@ -611,6 +692,7 @@ PrefsDialog::PrefsDialog(Session& session, Prefs& prefs, QWidget* parent) :
     initSeedingTab();
     initPrivacyTab();
     initNetworkTab();
+    initProxyTab();
     initDesktopTab();
     initRemoteTab();
 
@@ -737,6 +819,10 @@ void PrefsDialog::refreshPref(int key)
     case Prefs::PEER_PORT:
         ui_.peerPortStatusLabel->setText(tr("Status unknown"));
         ui_.testPeerPortButton->setEnabled(true);
+        break;
+
+    case Prefs::PROXY_LIST:
+        updateProxyValue(ui_.proxyTextEdit, Prefs::PROXY_LIST);
         break;
 
     default:
