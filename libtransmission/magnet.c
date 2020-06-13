@@ -8,6 +8,7 @@
 
 #include <string.h> /* strchr() */
 #include <stdio.h> /* sscanf() */
+#include <ctype.h> /* isxdigit() */
 
 #include "transmission.h"
 #include "crypto-utils.h" /* tr_hex_to_sha1() */
@@ -106,6 +107,88 @@ static void base32_to_sha1(uint8_t* out, char const* in, size_t const inlen)
 ****
 ***/
 
+bool tr_isMagnet(char const* uri)
+{
+    return uri != NULL && strncmp(uri, "magnet:?", 8) == 0;
+}
+
+static bool tr_isHex(char const* in, size_t const inlen)
+{
+    size_t i;
+
+    for (i = 0; i < inlen; ++i)
+    {
+        if (!isxdigit(in[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static bool tr_isBase32(char const* in, size_t const inlen)
+{
+    size_t i;
+
+    for (i = 0; i < inlen; ++i)
+    {
+        int lookup = in[i] - '0';
+
+        if (lookup < 0 || lookup >= base32LookupLen)
+        {
+            return false;
+        }
+
+        if (base32Lookup[lookup] == 0xFF)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool tr_maybeHash(char const* uri)
+{
+    size_t len;
+
+    if (uri == NULL)
+    {
+        return false;
+    }
+
+    len = strlen(uri);
+
+    if ((len == 32) && tr_isBase32(uri, len))
+    {
+        return true;
+    }
+
+    if ((len == 40) && tr_isHex(uri, len))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+static bool hash_to_sha1(uint8_t* sha1, char const* hash, size_t hashlen)
+{
+    if (hashlen == 40)
+    {
+        tr_hex_to_sha1(sha1, hash);
+        return true;
+    }
+    else if (hashlen == 32)
+    {
+        base32_to_sha1(sha1, hash, hashlen);
+        return true;
+    }
+
+    return false;
+}
+
 #define MAX_TRACKERS 64
 #define MAX_WEBSEEDS 64
 
@@ -120,7 +203,7 @@ tr_magnet_info* tr_magnetParse(char const* uri)
     uint8_t sha1[SHA_DIGEST_LENGTH];
     tr_magnet_info* info = NULL;
 
-    if (uri != NULL && strncmp(uri, "magnet:?", 8) == 0)
+    if (tr_isMagnet(uri))
     {
         for (char const* walk = uri + 8; !tr_str_is_empty(walk);)
         {
@@ -161,17 +244,7 @@ tr_magnet_info* tr_magnetParse(char const* uri)
             {
                 char const* hash = val + 9;
                 size_t const hashlen = vallen - 9;
-
-                if (hashlen == 40)
-                {
-                    tr_hex_to_sha1(sha1, hash);
-                    got_checksum = true;
-                }
-                else if (hashlen == 32)
-                {
-                    base32_to_sha1(sha1, hash, hashlen);
-                    got_checksum = true;
-                }
+                got_checksum = hash_to_sha1(sha1, hash, hashlen);
             }
 
             if (displayName == NULL && vallen > 0 && keylen == 2 && memcmp(key, "dn", 2) == 0)
@@ -200,6 +273,11 @@ tr_magnet_info* tr_magnetParse(char const* uri)
 
             walk = next != NULL ? next + 1 : NULL;
         }
+    }
+    else if (uri != NULL)
+    {
+        size_t const hashlen = strlen(uri);
+        got_checksum = hash_to_sha1(sha1, uri, hashlen);
     }
 
     if (got_checksum)

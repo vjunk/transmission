@@ -283,7 +283,7 @@ int tr_main(int argc, char* argv[])
     {
         tr_ctorSetMetainfo(ctor, fileContents, fileLength);
     }
-    else if (memcmp(torrentPath, "magnet:?", 8) == 0)
+    else if (tr_isMagnet(torrentPath) || tr_maybeHash(torrentPath))
     {
         tr_ctorSetMetainfoFromMagnetLink(ctor, torrentPath);
     }

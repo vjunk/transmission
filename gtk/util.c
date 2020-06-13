@@ -6,7 +6,6 @@
  *
  */
 
-#include <ctype.h> /* isxdigit() */
 #include <errno.h>
 #include <limits.h> /* INT_MAX */
 #include <stdarg.h>
@@ -211,25 +210,12 @@ static gboolean gtr_is_supported_url(char const* str)
 
 gboolean gtr_is_magnet_link(char const* str)
 {
-    return str != NULL && g_str_has_prefix(str, "magnet:?");
+    return tr_isMagnet(str);
 }
 
 gboolean gtr_is_hex_hashcode(char const* str)
 {
-    if (str == NULL || strlen(str) != 40)
-    {
-        return FALSE;
-    }
-
-    for (int i = 0; i < 40; ++i)
-    {
-        if (!isxdigit(str[i]))
-        {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
+    return tr_maybeHash(str);
 }
 
 static GtkWindow* getWindow(GtkWidget* w)

@@ -39,7 +39,7 @@ int AddData::set(QString const& key)
     }
     else if (Utils::isHexHashcode(key))
     {
-        magnet = QStringLiteral("magnet:?xt=urn:btih:") + key;
+        magnet = key;
         type = MAGNET;
     }
     else
