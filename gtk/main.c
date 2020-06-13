@@ -1296,6 +1296,13 @@ static void on_prefs_changed(TrCore* core UNUSED, tr_quark const key, gpointer d
 
     case TR_KEY_proxy_list:
         tr_sessionSetProxyList(tr, gtr_pref_list_get(key));
+
+    case TR_KEY_announce_external_ip:
+        tr_sessionSetAnnounceExternalIP(tr, gtr_pref_flag_get(key));
+        break;
+
+    case TR_KEY_static_external_ip:
+        tr_sessionSetStaticExternalIP(tr, gtr_pref_string_get(key));
         break;
 
     default:

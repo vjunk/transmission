@@ -64,6 +64,7 @@ private slots:
     void sessionUpdated();
     void onPortTested(bool);
     void onPortTest();
+    void onUpdateCurrentExternalIP();
     void onIdleLimitChanged();
     void onQueueStalledMinutesChanged();
 
@@ -90,9 +91,11 @@ private:
     QWidgetList sched_widgets_;
     QWidgetList block_widgets_;
     QWidgetList unsupported_when_remote_;
+    QWidgetList ext_ip_widgets_;
 
     int blocklist_http_tag_ = {};
     QHttp* blocklist_http_ = {};
     QMessageBox* blocklist_dialog_ = {};
     bool proxy_editor_active_ = {};
+    int ext_ip_tick_count_ = {};
 };

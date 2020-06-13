@@ -356,6 +356,8 @@ void tr_sessionGetDefaultSettings(tr_variant* d)
     tr_variantDictAddStr(d, TR_KEY_peer_socket_tos, TR_DEFAULT_PEER_SOCKET_TOS_STR);
     tr_variantDictAddBool(d, TR_KEY_pex_enabled, true);
     tr_variantDictAddBool(d, TR_KEY_port_forwarding_enabled, true);
+    tr_variantDictAddBool(d, TR_KEY_announce_external_ip, false);
+    tr_variantDictAddStr(d, TR_KEY_static_external_ip, "");
     tr_variantDictAddInt(d, TR_KEY_preallocation, TR_PREALLOCATE_SPARSE);
     tr_variantDictAddBool(d, TR_KEY_prefetch_enabled, DEFAULT_PREFETCH_ENABLED);
     tr_variantDictAddInt(d, TR_KEY_peer_id_ttl_hours, 6);
@@ -430,6 +432,8 @@ void tr_sessionGetSettings(tr_session* s, tr_variant* d)
     tr_variantDictAddStr(d, TR_KEY_peer_congestion_algorithm, s->peer_congestion_algorithm);
     tr_variantDictAddBool(d, TR_KEY_pex_enabled, s->isPexEnabled);
     tr_variantDictAddBool(d, TR_KEY_port_forwarding_enabled, tr_sessionIsPortForwardingEnabled(s));
+    tr_variantDictAddBool(d, TR_KEY_announce_external_ip, tr_sessionIsAnnounceExternalIPEnabled(s));
+    tr_variantDictAddStr(d, TR_KEY_static_external_ip, tr_sessionGetStaticExternalIP(s));
     tr_variantDictAddInt(d, TR_KEY_preallocation, s->preallocationMode);
     tr_variantDictAddBool(d, TR_KEY_prefetch_enabled, s->isPrefetchEnabled);
     tr_variantDictAddInt(d, TR_KEY_peer_id_ttl_hours, s->peer_id_ttl_hours);
@@ -1017,6 +1021,16 @@ static void sessionSetImpl(void* vdata)
     if (tr_variantDictFindBool(settings, TR_KEY_port_forwarding_enabled, &boolVal))
     {
         tr_sessionSetPortForwardingEnabled(session, boolVal);
+    }
+
+    if (tr_variantDictFindBool(settings, TR_KEY_announce_external_ip, &boolVal))
+    {
+        tr_sessionSetAnnounceExternalIP(session, boolVal);
+    }
+
+    if (tr_variantDictFindStr(settings, TR_KEY_static_external_ip, &str, NULL))
+    {
+        tr_sessionSetStaticExternalIP(session, str);
     }
 
     if (tr_variantDictFindInt(settings, TR_KEY_peer_limit_global, &i))
@@ -3073,4 +3087,97 @@ void tr_sessionCopyProxyList(tr_variant* vlist, tr_session const* session)
     TR_ASSERT(tr_variantIsList(vlist));
     TR_ASSERT(tr_isSession(session));
     tr_proxyListGet(session->proxyList, vlist);
+}
+
+/***
+****
+***/
+
+void tr_sessionSetAnnounceExternalIP(tr_session* session, bool enabled)
+{
+    TR_ASSERT(tr_isSession(session));
+    session->announceExternalIP = enabled;
+}
+
+bool tr_sessionIsAnnounceExternalIPEnabled(tr_session const* session)
+{
+    TR_ASSERT(tr_isSession(session));
+    return session->announceExternalIP;
+}
+
+void tr_sessionSetStaticExternalIP(tr_session* session, char const* str)
+{
+    TR_ASSERT(tr_isSession(session));
+    tr_strlcpy(session->staticExternalIP, str, sizeof(session->staticExternalIP));
+    tr_strstrip(session->staticExternalIP);
+}
+
+char const* tr_sessionGetStaticExternalIP(tr_session const* session)
+{
+    TR_ASSERT(tr_isSession(session));
+    return session->staticExternalIP;
+}
+
+char const* tr_sessionGetExternalIPStr(tr_session const* session)
+{
+    char const* ipv4_str = NULL;
+    tr_address const* pub_addr;
+    bool is_default;
+
+    TR_ASSERT(tr_isSession(session));
+
+    if (!session->announceExternalIP)
+    {
+        return ipv4_str;
+    }
+
+    /* User defined IP has maximum priority */
+    ipv4_str = tr_sessionGetStaticExternalIP(session);
+
+    if (!tr_str_is_empty(ipv4_str))
+    {
+        return ipv4_str;
+    }
+
+    /* Ask NAT-PMP/UPnP router */
+    if (session->shared != NULL)
+    {
+        ipv4_str = tr_sharedGetExternalIP(session->shared);
+    }
+
+    if (!tr_str_is_empty(ipv4_str))
+    {
+        return ipv4_str;
+    }
+
+    /* Assume direct Internet connection and try to guess our address */
+    pub_addr = tr_sessionGetPublicAddress(session, TR_AF_INET, &is_default);
+
+    if (pub_addr != NULL && !is_default)
+    {
+        return tr_address_to_string(pub_addr);
+    }
+
+    return tr_globalIPv4Str();
+}
+
+uint32_t tr_sessionGetExternalIPAddr(tr_session const* session)
+{
+    uint32_t ipv4_addr = 0;
+    char const* ipv4_str = tr_sessionGetExternalIPStr(session);
+    tr_address taddr;
+
+    if (tr_str_is_empty(ipv4_str))
+    {
+        return ipv4_addr;
+    }
+
+    if (!tr_address_from_string(&taddr, ipv4_str) || (taddr.type != TR_AF_INET))
+    {
+        return ipv4_addr;
+    }
+
+    ipv4_addr = taddr.addr.addr4.s_addr;
+
+    return ipv4_addr;
 }

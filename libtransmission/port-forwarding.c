@@ -256,3 +256,20 @@ int tr_sharedTraversalStatus(tr_shared const* s)
 {
     return MAX(s->natpmpStatus, s->upnpStatus);
 }
+
+char const* tr_sharedGetExternalIP(tr_shared const* s)
+{
+    char const* ipv4_str = NULL;
+
+    if (s->natpmp != NULL)
+    {
+        ipv4_str = tr_natpmpGetExternalIP(s->natpmp);
+    }
+
+    if (tr_str_is_empty(ipv4_str) && s->upnp != NULL)
+    {
+        ipv4_str = tr_upnpGetExternalIP(s->upnp);
+    }
+
+    return ipv4_str;
+}
