@@ -43,7 +43,7 @@ void tr_proxyListGet(tr_proxy_list* const proxy_list, tr_variant* vlist)
     tr_variantFree(vlist);
     tr_variantInitList(vlist, 0);
 
-    if(proxy_list == NULL)
+    if (proxy_list == NULL)
     {
         return;
     }
